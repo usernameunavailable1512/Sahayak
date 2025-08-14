@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Plant Growth & Photosynthesis Simulator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 1000px;
+            width: 95%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            margin-bottom: 30px;
+        }
+
+        canvas {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 70%, #8B4513 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            color: #00ff88;
+            font-size: 0.9em;
+        }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            padding: 8px;
+            color: white;
+            width: 100%;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00ff88;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        #startButton {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+
+        #pauseButton {
+            background: #ff9100;
+            color: #1a1a2e;
+        }
+
+        #resetButton {
+            background: #ff3366;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 5px;
+        }
+
+        .stats-label {
+            font-size: 0.8em;
+            color: #00ff88;
+        }
+
+        .stats-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .hint-button {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .guidance-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .step-item.completed {
+            background: rgba(0, 255, 136, 0.3);
+            border-left: 5px solid #00ff88;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #1a1a2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .feedback-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .step-reason {
+            font-size: 0.85em;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .message-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .growth-indicator {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(0, 255, 136, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Advanced Plant Growth & Photosynthesis Simulator</h1>
+        <div style="position: relative;">
+            <canvas id="plantCanvas" width="1000" height="600"></canvas>
+            <div class="growth-indicator" id="growthIndicator">
+                Plant Size: <span id="plantSizeDisplay">0%</span><br>
+                Growth Stage: <span id="growthStageDisplay">Seed</span>
+            </div>
+        </div>
+        
+        <div class="button-group" style="margin-bottom: 20px;">
+            <button class="hint-button" id="showHints">SHOW HINTS</button>
+            <button class="hint-button" id="showSuggestions">SHOW SUGGESTIONS</button>
+            <button class="hint-button" id="showTips">SHOW TIPS</button>
+            <button class="hint-button" id="timelapseGrowth">TIMELAPSE GROWTH</button>
+        </div>
+
+        <div class="guidance-panel">
+            <h3>Learning Steps <span style="font-size:0.8em;color:#00ff88">(Complete all steps)</span></h3>
+            <ul class="step-list" id="stepList">
+                <li class="step-item" data-step="1">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Set Sun Conditions:</strong> Adjust sunlight intensity and environmental factors.
+                        <div class="step-reason">Why: Sunlight is the primary energy source for photosynthesis and plant growth.</div>
+                    </div>
+                </li>
+                <li class="step-item" data-step="2">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>Start Growth:</strong> Click START to begin sending sunlight data packets to the plant.
+                        <div class="step-reason">Why: Plants convert sunlight into chemical energy through photosynthesis.</div>
+                    </div>
+                </li>
+                <li class="step-item" data-step="3">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>Watch Data Flow:</strong> Observe sunlight packets being processed by the plant.
+                        <div class="step-reason">Why: Each photon carries energy that powers cellular processes.</div>
+                    </div>
+                </li>
+                <li class="step-item" data-step="4">
+                    <div class="step-number">4</div>
+                    <div>
+                        <strong>Monitor Growth:</strong> See the plant gradually increase in size and complexity.
+                        <div class="step-reason">Why: Accumulated energy and nutrients enable cellular division and growth.</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="feedback-modal" id="feedbackModal">
+            <h3>Concept Check Question <span style="float:right;cursor:pointer" onclick="document.getElementById('feedbackModal').style.display='none'">×</span></h3>
+            <p>When you see more sunlight data packets reaching the plant, what should happen to the growth rate?</p>
+            <div class="feedback-buttons">
+                <button onclick="checkAnswer(1)">A) Growth rate decreases</button>
+                <button onclick="checkAnswer(2)">B) Growth rate increases</button>
+                <button onclick="checkAnswer(3)">C) No change in growth</button>
+            </div>
+            <div id="feedbackText" style="margin-top:15px;display:none;"></div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="sunIntensity">Sun Intensity (%)</label>
+                <input type="number" id="sunIntensity" value="80" step="5" min="0" max="100">
+            </div>
+            <div class="control-group">
+                <label for="soilQuality">Soil Quality (%)</label>
+                <input type="number" id="soilQuality" value="75" step="5" min="20" max="100">
+            </div>
+            <div class="control-group">
+                <label for="waterLevel">Water Level (%)</label>
+                <input type="number" id="waterLevel" value="85" step="5" min="10" max="100">
+            </div>
+            <div class="control-group">
+                <label for="co2Level">CO₂ Level (ppm)</label>
+                <input type="number" id="co2Level" value="410" step="10" min="200" max="800">
+            </div>
+            <div class="control-group">
+                <label for="speedSlider">Growth Speed: <span id="speedValue">1.0</span>x</label>
+                <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="startButton">START GROWTH</button>
+            <button id="pauseButton">PAUSE</button>
+            <button id="resetButton">RESET</button>
+            <button id="dayNightButton">DAY/NIGHT CYCLE</button>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-item">
+                <div class="stats-label">Energy Packets Received</div>
+                <div class="stats-value" id="packetsValue">0</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">Plant Height</div>
+                <div class="stats-value" id="heightValue">0 cm</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">Leaf Count</div>
+                <div class="stats-value" id="leavesValue">0</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">Biomass</div>
+                <div class="stats-value" id="biomassValue">0.0 g</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">O₂ Production</div>
+                <div class="stats-value" id="oxygenValue">0.0 mL/min</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">Glucose Stored</div>
+                <div class="stats-value" id="glucoseValue">0.0 mg</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">Growth Rate</div>
+                <div class="stats-value" id="growthRateValue">0.0%/min</div>
+            </div>
+            <div class="info-item">
+                <div class="stats-label">Time Elapsed</div>
+                <div class="stats-value" id="timeValue">0 days</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="message-container" id="messageContainer"></div>
+
+    <script>
+        const canvas = document.getElementById('plantCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Plant growth variables
+        let plantSize = 0; // 0-100 scale
+        let plantHeight = 0; // in cm
+        let leafCount = 0;
+        let biomass = 0; // in grams
+        let glucoseStored = 0;
+        let oxygenProduced = 0;
+        let energyPacketsReceived = 0;
+        
+        // Environmental variables
+        let sunIntensity = 80;
+        let soilQuality = 75;
+        let waterLevel = 85;
+        let co2Level = 410;
+        
+        // Animation variables
+        let isRunning = false;
+        let isPaused = false;
+        let isDayNight = false;
+        let animationFrameId;
+        let t = 0;
+        let speed = 1;
+        let dayTime = 0;
+        
+        // Particle systems
+        let sunlightPackets = [];
+        let energyParticles = [];
+        let oxygenBubbles = [];
+        let rootNutrients = [];
+        
+        // Plant structure
+        let plantParts = {
+            stem: { segments: [] },
+            leaves: [],
+            roots: [],
+            flowers: []
+        };
+        
+        // Learning variables
+        let currentStep = 1;
+        let questionAsked = false;
+        let stepDelayTimers = {};
+        let currentMessage = null;
+        let dataFlowShown = false;
+        let growthObserved = false;
+
+        // Growth stages
+        const growthStages = [
+            { name: 'Seed', size: 0, description: 'Dormant seed waiting for conditions' },
+            { name: 'Germination', size: 5, description: 'First root and shoot emerging' },
+            { name: 'Seedling', size: 15, description: 'Young plant with first leaves' },
+            { name: 'Vegetative', size: 40, description: 'Rapid leaf and stem growth' },
+            { name: 'Mature', size: 75, description: 'Full-sized plant ready for reproduction' },
+            { name: 'Flowering', size: 100, description: 'Producing flowers and seeds' }
+        ];
+
+        function updateSteps() {
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                if (index + 1 <= currentStep) {
+                    item.classList.add('completed');
+                }
+            });
+        }
+
+        function updateStepWithDelay(newStep, delay = 4000) {
+            if (stepDelayTimers[newStep]) {
+                clearTimeout(stepDelayTimers[newStep]);
+            }
+            
+            stepDelayTimers[newStep] = setTimeout(() => {
+                if (currentStep < newStep) {
+                    currentStep = newStep;
+                    updateSteps();
+                }
+            }, delay);
+        }
+
+        function showFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'block';
+            questionAsked = true;
+        }
+
+        function checkAnswer(selected) {
+            const feedbackText = document.getElementById('feedbackText');
+            feedbackText.style.display = 'block';
+            feedbackText.style.color = '#00ff88';
+            
+            if(selected === 2) {
+                feedbackText.innerHTML = `Correct! ✅<br>More sunlight packets mean more energy for photosynthesis, leading to faster growth rates.`;
+            } else {
+                feedbackText.innerHTML = `Incorrect! ❌<br>Sunlight provides energy for photosynthesis. More energy packets = more growth potential!`;
+            }
+            
+            setTimeout(() => {
+                document.getElementById('feedbackModal').style.display = 'none';
+                feedbackText.style.display = 'none';
+            }, 4000);
+        }
+
+        function timelapseGrowth() {
+            showTemporaryMessage("Starting timelapse growth demonstration...", "#00ff88", 3000);
+            
+            document.getElementById('sunIntensity').value = 100;
+            document.getElementById('soilQuality').value = 100;
+            document.getElementById('waterLevel').value = 100;
+            document.getElementById('co2Level').value = 600;
+            document.getElementById('speedSlider').value = 3;
+            
+            setTimeout(() => {
+                document.getElementById('startButton').click();
+                showTemporaryMessage("Watch the plant grow from seed to mature plant!", "#4a90e2", 4000);
+            }, 1000);
+        }
+
+        function getCurrentGrowthStage() {
+            for (let i = growthStages.length - 1; i >= 0; i--) {
+                if (plantSize >= growthStages[i].size) {
+                    return growthStages[i];
+                }
+            }
+            return growthStages[0];
+        }
+
+        function updateGrowthDisplay() {
+            const stage = getCurrentGrowthStage();
+            document.getElementById('plantSizeDisplay').textContent = `${plantSize.toFixed(1)}%`;
+            document.getElementById('growthStageDisplay').textContent = stage.name;
+        }
+
+        function calculateGrowthRate() {
+            let sunFactor = (isDayNight ? Math.max(0, Math.sin(dayTime)) : sunIntensity / 100) * (sunIntensity / 100);
+            let soilFactor = soilQuality / 100;
+            let waterFactor = waterLevel / 100;
+            let co2Factor = Math.min(co2Level / 400, 1.5);
+            
+            return Math.min(sunFactor, soilFactor, waterFactor) * co2Factor * 0.5;
+        }
+
+        function updatePlantGrowth() {
+            if (!isRunning || isPaused) return;
+            
+            let growthRate = calculateGrowthRate();
+            let dt = 0.02 * speed;
+            
+            // Update plant metrics
+            plantSize += growthRate * dt * 10;
+            plantSize = Math.min(plantSize, 100);
+            
+            plantHeight = plantSize * 2; // Max 200cm
+            leafCount = Math.floor(plantSize / 10);
+            biomass = Math.pow(plantSize / 10, 1.5);
+            oxygenProduced = growthRate * 5;
+            glucoseStored += growthRate * dt * 2;
+            
+            // Update plant structure based on size
+            updatePlantStructure();
+        }
+
+        function updatePlantStructure() {
+            // Update stem segments
+            let targetSegments = Math.floor(plantSize / 8);
+            while (plantParts.stem.segments.length < targetSegments) {
+                plantParts.stem.segments.push({
+                    height: plantParts.stem.segments.length * 15 + 20,
+                    thickness: Math.max(2, 8 - plantParts.stem.segments.length * 0.5)
+                });
+            }
+            
+            // Update leaves
+            let targetLeaves = Math.floor(plantSize / 12);
+            while (plantParts.leaves.length < targetLeaves) {
+                let segmentIndex = plantParts.leaves.length % plantParts.stem.segments.length;
+                plantParts.leaves.push({
+                    x: canvas.width / 2 + (plantParts.leaves.length % 2 === 0 ? 30 : -30),
+                    y: canvas.height - 50 - segmentIndex * 15,
+                    size: Math.random() * 15 + 10,
+                    angle: Math.random() * 0.4 - 0.2
+                });
+            }
+            
+            // Update roots
+            let targetRoots = Math.floor(plantSize / 20);
+            while (plantParts.roots.length < targetRoots) {
+                plantParts.roots.push({
+                    x: canvas.width / 2 + (Math.random() - 0.5) * 60,
+                    y: canvas.height - 30,
+                    length: Math.random() * 40 + 20,
+                    angle: Math.random() * Math.PI / 3 + Math.PI / 3
+                });
+            }
+            
+            // Add flowers when mature
+            if (plantSize > 80 && plantParts.flowers.length === 0) {
+                plantParts.flowers.push({
+                    x: canvas.width / 2,
+                    y: canvas.height - plantHeight - 20,
+                    size: 12,
+                    petals: 6
+                });
+            }
+        }
+
+        function createSunlightPacket() {
+            if (Math.random() < 0.1 + (sunIntensity / 1000)) {
+                sunlightPackets.push({
+                    x: 100 + Math.random() * 100,
+                    y: 50 + Math.random() * 50,
+                    targetX: canvas.width / 2 + (Math.random() - 0.5) * 100,
+                    targetY: canvas.height - plantHeight - 50,
+                    speed: 0.02 + Math.random() * 0.02,
+                    energy: Math.random() * 50 + 50,
+                    size: 3 + Math.random() * 2,
+                    color: `hsl(${45 + Math.random() * 15}, 100%, ${70 + Math.random() * 20}%)`,
+                    life: 1,
+                    processed: false
+                });
+            }
+        }
+
+        function updateParticles() {
+            // Update sunlight packets
+            sunlightPackets.forEach(packet => {
+                packet.x += (packet.targetX - packet.x) * packet.speed;
+                packet.y += (packet.targetY - packet.y) * packet.speed;
+                
+                // Check if packet reached plant
+                let distance = Math.sqrt(
+                    Math.pow(packet.x - packet.targetX, 2) + 
+                    Math.pow(packet.y - packet.targetY, 2)
+                );
+                
+                if (distance < 20 && !packet.processed) {
+                    packet.processed = true;
+                    energyPacketsReceived++;
+                    
+                    // Create energy particle
+                    energyParticles.push({
+                        x: packet.x,
+                        y: packet.y,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -Math.random() * 3 - 1,
+                        life: 30,
+                        energy: packet.energy,
+                        color: '#32CD32'
+                    });
+                    
+                    // Create oxygen bubble occasionally
+                    if (Math.random() < 0.3) {
+                        oxygenBubbles.push({
+                            x: packet.x + (Math.random() - 0.5) * 20,
+                            y: packet.y,
+                            vy: -Math.random() * 2 - 1,
+                            life: 60,
+                            size: Math.random() * 4 + 2,
+                            color: '#87CEEB'
+                        });
+                    }
+                }
+            });
+            
+            // Update energy particles
+            energyParticles.forEach(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.1; // gravity
+                particle.life--;
+            });
+            
+            // Update oxygen bubbles
+            oxygenBubbles.forEach(bubble => {
+                bubble.y += bubble.vy;
+                bubble.life--;
+            });
+            
+            // Remove expired particles
+            sunlightPackets = sunlightPackets.filter(p => p.life > 0 && !p.processed);
+            energyParticles = energyParticles.filter(p => p.life > 0);
+            oxygenBubbles = oxygenBubbles.filter(b => b.life > 0);
+        }
+
+        function drawSun() {
+            let sunX = 150;
+            let sunY = 80;
+            let currentIntensity = isDayNight ? Math.max(0.1, Math.sin(dayTime)) : sunIntensity / 100;
+            
+            // Sun glow
+            let gradient = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 50);
+            gradient.addColorStop(0, `rgba(255, 255, 0, ${0.8 * currentIntensity})`);
+            gradient.addColorStop(1, `rgba(255, 165, 0, ${0.2 * currentIntensity})`);
+            
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 40, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Sun rays
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.6 * currentIntensity})`;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                let angle = (i * Math.PI) / 4;
+                ctx.beginPath();
+                ctx.moveTo(sunX + Math.cos(angle) * 50, sunY + Math.sin(angle) * 50);
+                ctx.lineTo(sunX + Math.cos(angle) * 70, sunY + Math.sin(angle) * 70);
+                ctx.stroke();
+            }
+            
+            // Data packet indicator
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText(`Sending: ${Math.floor(sunIntensity)}% Energy`, sunX - 40, sunY + 80);
+        }
+
+        function drawPlant() {
+            let baseX = canvas.width / 2;
+            let baseY = canvas.height - 50;
+            
+            // Draw soil line
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, baseY + 20, canvas.width, 30);
+            
+            // Draw roots
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 2;
+            plantParts.roots.forEach(root => {
+                ctx.beginPath();
+                ctx.moveTo(baseX, baseY + 20);
+                ctx.lineTo(
+                    root.x,
+                    root.y + Math.sin(root.angle) * root.length
+                );
+                ctx.stroke();
+            });
+            
+            // Draw stem segments
+            ctx.strokeStyle = '#228B22';
+            plantParts.stem.segments.forEach((segment, index) => {
+                ctx.lineWidth = segment.thickness;
+                ctx.beginPath();
+                ctx.moveTo(baseX, baseY - (index * 15));
+                ctx.lineTo(baseX, baseY - segment.height);
+                ctx.stroke();
+            });
+            
+            // Draw leaves
+            plantParts.leaves.forEach(leaf => {
+                ctx.save();
+                ctx.translate(leaf.x, leaf.y);
+                ctx.rotate(leaf.angle);
+                
+                // Leaf shape
+                ctx.beginPath();
+                ctx.ellipse(0, 0, leaf.size, leaf.size * 0.6, 0, 0, Math.PI * 2);
+                ctx.fillStyle = `hsl(120, ${60 + Math.random() * 20}%, ${40 + Math.random() * 20}%)`;
+                ctx.fill();
+                ctx.strokeStyle = '#006400';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Leaf veins
+                ctx.strokeStyle = '#006400';
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(-leaf.size * 0.8, 0);
+                ctx.lineTo(leaf.size * 0.8, 0);
+                ctx.moveTo(0, -leaf.size * 0.5);
+                ctx.lineTo(0, leaf.size * 0.5);
+                ctx.stroke();
+                
+                ctx.restore();
+            });
+            
+            // Draw flowers
+            plantParts.flowers.forEach(flower => {
+                for (let i = 0; i < flower.petals; i++) {
+                    let angle = (i * Math.PI * 2) / flower.petals;
+                    ctx.beginPath();
+                    ctx.arc(
+                        flower.x + Math.cos(angle) * flower.size * 0.7,
+                        flower.y + Math.sin(angle) * flower.size * 0.7,
+                        flower.size * 0.4,
+                        0, Math.PI * 2
+                    );
+                    ctx.fillStyle = `hsl(${300 + Math.random() * 60}, 80%, 70%)`;
+                    ctx.fill();
+                }
+                
+                // Flower center
+                ctx.beginPath();
+                ctx.arc(flower.x, flower.y, flower.size * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFD700';
+                ctx.fill();
+            });
+        }
+
+        function drawParticles() {
+            // Draw sunlight packets
+            sunlightPackets.forEach(packet => {
+                ctx.save();
+                ctx.globalAlpha = packet.life;
+                
+                // Packet glow
+                let gradient = ctx.createRadialGradient(packet.x, packet.y, 0, packet.x, packet.y, packet.size * 2);
+                gradient.addColorStop(0, packet.color);
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.beginPath();
+                ctx.arc(packet.x, packet.y, packet.size * 2, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // Packet core
+                ctx.beginPath();
+                ctx.arc(packet.x, packet.y, packet.size, 0, Math.PI * 2);
+                ctx.fillStyle = packet.color;
+                ctx.fill();
+                
+                // Energy value
+                ctx.font = '8px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.fillText(Math.floor(packet.energy), packet.x - 8, packet.y + 15);
+                
+                ctx.restore();
+            });
+            
+            // Draw energy particles
+            energyParticles.forEach(particle => {
+                ctx.save();
+                ctx.globalAlpha = particle.life / 30;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+                ctx.restore();
+            });
+            
+            // Draw oxygen bubbles
+            oxygenBubbles.forEach(bubble => {
+                ctx.save();
+                ctx.globalAlpha = bubble.life / 60;
+                ctx.beginPath();
+                ctx.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+                ctx.fillStyle = bubble.color;
+                ctx.fill();
+                ctx.strokeStyle = '#4682B4';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        function drawEnvironmentalInfo() {
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#00ff88';
+            
+            // Environmental conditions
+            ctx.fillText(`☀️ Sun: ${sunIntensity}%`, 20, 30);
+            ctx.fillText(`🌱 Soil: ${soilQuality}%`, 20, 50);
+            ctx.fillText(`💧 Water: ${waterLevel}%`, 20, 70);
+            ctx.fillText(`🌬️ CO₂: ${co2Level}ppm`, 20, 90);
+            
+            // Growth equation
+            ctx.fillText('Growth = f(Sunlight, Water, Nutrients, CO₂)', 20, canvas.height - 60);
+            ctx.fillText(`Current Rate: ${(calculateGrowthRate() * 100).toFixed(1)}%/min`, 20, canvas.height - 40);
+            
+            // Day/night indicator
+            if (isDayNight) {
+                let timeOfDay = Math.sin(dayTime) > 0 ? '☀️ Day' : '🌙 Night';
+                ctx.fillText(timeOfDay, canvas.width - 100, 30);
+            }
+        }
+
+        function updateInfoPanel() {
+            document.getElementById('packetsValue').textContent = energyPacketsReceived;
+            document.getElementById('heightValue').textContent = `${plantHeight.toFixed(1)} cm`;
+            document.getElementById('leavesValue').textContent = leafCount;
+            document.getElementById('biomassValue').textContent = `${biomass.toFixed(1)} g`;
+            document.getElementById('oxygenValue').textContent = `${oxygenProduced.toFixed(1)} mL/min`;
+            document.getElementById('glucoseValue').textContent = `${glucoseStored.toFixed(1)} mg`;
+            document.getElementById('growthRateValue').textContent = `${(calculateGrowthRate() * 100).toFixed(1)}%/min`;
+            document.getElementById('timeValue').textContent = `${(t / 100).toFixed(1)} days`;
+        }
+
+        function animate() {
+            // Update physics
+            updatePlantGrowth();
+            createSunlightPacket();
+            updateParticles();
+            updateGrowthDisplay();
+            
+            // Clear canvas with gradient background
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.7, '#98FB98');
+            gradient.addColorStop(1, '#8B4513');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw everything
+            drawSun();
+            drawPlant();
+            drawParticles();
+            drawEnvironmentalInfo();
+            updateInfoPanel();
+            
+            // Update day/night cycle
+            if (isDayNight) {
+                dayTime += 0.02 * speed;
+            }
+            
+            // Step progression
+            if (isRunning && t > 0 && currentStep < 2) {
+                currentStep = 2;
+                updateSteps();
+                showTemporaryMessage("Growth started! Watch sunlight packets flowing to the plant.", "#00ff88");
+            }
+            
+            if (energyPacketsReceived > 5 && currentStep < 3 && !dataFlowShown) {
+                dataFlowShown = true;
+                showTemporaryMessage("Energy packets being converted to growth! Each packet carries photosynthetic energy.", "#4a90e2", 3000);
+                updateStepWithDelay(3, 3500);
+            }
+            
+            if (plantSize > 15 && currentStep < 4 && dataFlowShown && !growthObserved) {
+                setTimeout(() => {
+                    if (!growthObserved) {
+                        growthObserved = true;
+                        showTemporaryMessage("Plant is growing! Notice how size increases with more energy packets.", "#ff9100", 3000);
+                        updateStepWithDelay(4, 3500);
+                        
+                        setTimeout(() => {
+                            if (!questionAsked) {
+                                showFeedbackModal();
+                            }
+                        }, 5000);
+                    }
+                }, 2000);
+            }
+            
+            t += 1;
+
+            if (isRunning && !isPaused) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        function showTemporaryMessage(message, color, duration = 2000) {
+            if (currentMessage) {
+                currentMessage.remove();
+                currentMessage = null;
+            }
+
+            const messageContainer = document.getElementById('messageContainer');
+            const msg = document.createElement('div');
+            msg.style.backgroundColor = color;
+            msg.style.color = '#1a1a2e';
+            msg.style.padding = '10px 20px';
+            msg.style.borderRadius = '5px';
+            msg.style.fontSize = '14px';
+            msg.style.fontWeight = 'bold';
+            msg.style.textAlign = 'center';
+            msg.style.maxWidth = '400px';
+            msg.style.margin = '0 auto';
+            msg.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+            msg.textContent = message;
+            
+            messageContainer.appendChild(msg);
+            currentMessage = msg;
+
+            setTimeout(() => {
+                if (currentMessage === msg) {
+                    msg.style.opacity = '0';
+                    msg.style.transition = 'opacity 1s';
+                    setTimeout(() => {
+                        if (msg.parentNode) {
+                            msg.remove();
+                        }
+                        if (currentMessage === msg) {
+                            currentMessage = null;
+                        }
+                    }, 1000);
+                }
+            }, duration);
+        }
+
+        // Event listeners
+        document.getElementById('startButton').addEventListener('click', () => {
+            sunIntensity = parseFloat(document.getElementById('sunIntensity').value);
+            soilQuality = parseFloat(document.getElementById('soilQuality').value);
+            waterLevel = parseFloat(document.getElementById('waterLevel').value);
+            co2Level = parseFloat(document.getElementById('co2Level').value);
+            speed = parseFloat(document.getElementById('speedSlider').value);
+            
+            isRunning = true;
+            isPaused = false;
+            currentStep = Math.max(currentStep, 2);
+            updateSteps();
+            
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animate();
+        });
+
+        document.getElementById('pauseButton').addEventListener('click', () => {
+            isPaused = !isPaused;
+            document.getElementById('pauseButton').textContent = isPaused ? 'RESUME' : 'PAUSE';
+            if (!isPaused && isRunning) animate();
+        });
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            isRunning = false;
+            isPaused = false;
+            t = 0;
+            speed = 1;
+            dayTime = 0;
+            
+            // Reset plant
+            plantSize = 0;
+            plantHeight = 0;
+            leafCount = 0;
+            biomass = 0;
+            glucoseStored = 0;
+            oxygenProduced = 0;
+            energyPacketsReceived = 0;
+            
+            // Clear plant structure
+            plantParts = {
+                stem: { segments: [] },
+                leaves: [],
+                roots: [],
+                flowers: []
+            };
+            
+            // Clear particles
+            sunlightPackets = [];
+            energyParticles = [];
+            oxygenBubbles = [];
+            rootNutrients = [];
+            
+            // Reset learning variables
+            currentStep = 1;
+            questionAsked = false;
+            dataFlowShown = false;
+            growthObserved = false;
+            
+            Object.values(stepDelayTimers).forEach(timer => clearTimeout(timer));
+            stepDelayTimers = {};
+            
+            if (currentMessage) {
+                currentMessage.remove();
+                currentMessage = null;
+            }
+            
+            updateSteps();
+            updateGrowthDisplay();
+            
+            // Reset controls
+            document.getElementById('sunIntensity').value = 80;
+            document.getElementById('soilQuality').value = 75;
+            document.getElementById('waterLevel').value = 85;
+            document.getElementById('co2Level').value = 410;
+            document.getElementById('speedSlider').value = 1;
+            document.getElementById('speedValue').textContent = "1.0";
+            document.getElementById('pauseButton').textContent = 'PAUSE';
+            
+            sunIntensity = 80;
+            soilQuality = 75;
+            waterLevel = 85;
+            co2Level = 410;
+            
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            // Initial draw
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.7, '#98FB98');
+            gradient.addColorStop(1, '#8B4513');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawSun();
+            drawPlant();
+            drawEnvironmentalInfo();
+            updateInfoPanel();
+        });
+
+        document.getElementById('dayNightButton').addEventListener('click', () => {
+            isDayNight = !isDayNight;
+            document.getElementById('dayNightButton').textContent = isDayNight ? 'STOP CYCLE' : 'DAY/NIGHT CYCLE';
+            document.getElementById('dayNightButton').style.background = isDayNight ? '#ff9100' : '#4a90e2';
+            dayTime = 0;
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', (event) => {
+            speed = parseFloat(event.target.value);
+            document.getElementById('speedValue').textContent = speed.toFixed(1);
+        });
+
+        // Hint buttons
+        document.getElementById('showHints').addEventListener('click', () => {
+            alert("Hint: Watch the energy packets! More sunlight intensity means more packets and faster growth.");
+        });
+
+        document.getElementById('showSuggestions').addEventListener('click', () => {
+            alert("Suggestion: Try different environmental conditions to see how they affect packet flow and growth rate!");
+        });
+
+        document.getElementById('showTips').addEventListener('click', () => {
+            alert("Tip: Each sunlight packet represents photons carrying energy. Plants convert this into chemical energy for growth!");
+        });
+
+        document.getElementById('timelapseGrowth').addEventListener('click', timelapseGrowth);
+
+        // Keyboard controls
+        document.addEventListener('keydown', (event) => {
+            switch(event.key) {
+                case ' ':
+                    document.getElementById('startButton').click();
+                    break;
+                case 'p':
+                    document.getElementById('pauseButton').click();
+                    break;
+                case 'r':
+                    document.getElementById('resetButton').click();
+                    break;
+                case 'n':
+                    document.getElementById('dayNightButton').click();
+                    break;
+            }
+        });
+
+        // Input validation
+        ['sunIntensity', 'soilQuality', 'waterLevel', 'co2Level'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                currentStep = 1;
+                updateSteps();
+            });
+        });
+
+        // Initial setup
+        function init() {
+            // Initial background
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.7, '#98FB98');
+            gradient.addColorStop(1, '#8B4513');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawSun();
+            drawPlant();
+            drawEnvironmentalInfo();
+            updateInfoPanel();
+            updateSteps();
+            updateGrowthDisplay();
+
+            // Add tooltip
+            const tooltip = document.createElement('div');
+            tooltip.style.position = 'fixed';
+            tooltip.style.bottom = '10px';
+            tooltip.style.left = '50%';
+            tooltip.style.transform = 'translateX(-50%)';
+            tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+            tooltip.style.color = '#fff';
+            tooltip.style.padding = '10px';
+            tooltip.style.borderRadius = '5px';
+            tooltip.style.fontSize = '0.8em';
+            tooltip.innerHTML = `
+                Keyboard Controls:<br>
+                Space: Start Growth | P: Pause | R: Reset | N: Day/Night Cycle<br>
+                Watch sunlight packets flow from sun to plant!
+            `;
+            document.body.appendChild(tooltip);
+
+            setTimeout(() => {
+                tooltip.style.opacity = '0';
+                tooltip.style.transition = 'opacity 1s';
+                setTimeout(() => tooltip.remove(), 1000);
+            }, 5000);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const container = document.querySelector('.container');
+            const containerWidth = container.clientWidth;
+            canvas.width = Math.min(1000, containerWidth - 40);
+            canvas.height = canvas.width * 0.6;
+            init();
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
